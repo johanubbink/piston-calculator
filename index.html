@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Piston Sizing · Top-Hung Window Strut</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:   #e9e2d4;
+    --card:    #f6f2e9;
+    --card-2:  #efe9dc;
+    --ink:     #1f2d44;
+    --ink-2:   #57647c;
+    --rule:    #d3ccba;
+    --rule-2:  #bdb4a0;
+    --vermilion:#c1452a;
+    --blue:    #2c5a86;
+    --ochre:   #a9802f;
+    --good:    #2f7d57;
+    --bad:     #b3402f;
+    --grid:    rgba(31,45,68,0.055);
+    --mono: 'IBM Plex Mono', ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --sans: 'IBM Plex Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; color: var(--ink); font-family: var(--sans);
+    font-size: 14px; line-height: 1.5;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- masthead ---- */
+  header {
+    border-top: 4px solid var(--vermilion);
+    border-bottom: 1px solid var(--rule-2);
+    background: var(--card);
+    padding: 20px clamp(16px, 4vw, 40px);
+  }
+  .masthead { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap;
+    align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--vermilion); margin-bottom: 6px; }
+  header h1 { margin: 0; font-family: var(--mono); font-weight: 600;
+    font-size: clamp(20px, 3.6vw, 30px); letter-spacing: -.01em; line-height: 1.05; }
+  header h1 b { color: var(--vermilion); font-weight: 600; }
+  .formula { font-family: var(--mono); font-size: clamp(11px, 1.4vw, 13px); color: var(--ink-2);
+    text-align: right; }
+  .formula b { color: var(--ink); font-weight: 500; }
+
+  /* ---- layout ---- */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: clamp(14px, 3vw, 28px);
+    display: grid; grid-template-columns: 340px 1fr; gap: clamp(14px, 2.4vw, 26px); align-items: start; }
+  .left  { display: flex; flex-direction: column; gap: clamp(14px, 2.4vw, 22px); min-width: 0; }
+  .right { display: flex; flex-direction: column; gap: clamp(14px, 2.4vw, 22px); min-width: 0; }
+
+  .panel { background: var(--card); border: 1px solid var(--rule-2); border-radius: 3px;
+    padding: 18px 20px; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 6px 20px -16px rgba(31,45,68,.5); }
+  h2 { margin: 0 0 14px; font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--ink-2);
+    display: flex; align-items: center; gap: 9px; }
+  h2::before { content: ""; width: 12px; height: 3px; background: var(--vermilion); flex: none; }
+
+  .grp { display: flex; flex-direction: column; gap: 2px; margin-bottom: 20px; }
+  .grp:last-child { margin-bottom: 0; }
+
+  /* ---- fields ---- */
+  label.field { display: grid; grid-template-columns: 1fr 96px; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px dotted var(--rule); }
+  label.field:last-of-type { border-bottom: 0; }
+  label.field > span { font-size: 13px; }
+  label.field small { display: block; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .02em; color: var(--ink-2); text-transform: uppercase; margin-top: 1px; }
+  input[type="number"], select {
+    width: 100%; background: var(--card-2); border: 1px solid var(--rule-2); color: var(--ink);
+    border-radius: 2px; padding: 7px 8px; font-family: var(--mono); font-size: 14px; text-align: right;
+  }
+  select { text-align: left; font-size: 12.5px; }
+  input[type="number"]:focus, select:focus { outline: none; border-color: var(--vermilion);
+    box-shadow: 0 0 0 2px rgba(193,69,42,.16); }
+  .derived { font-family: var(--mono); font-size: 11px; color: var(--ink-2); padding: 7px 0 0;
+    display: flex; justify-content: space-between; }
+  .derived b { color: var(--blue); font-weight: 500; }
+
+  /* ---- figure ---- */
+  .figure { position: relative; padding: 16px; }
+  .figure .cap { position: absolute; top: 12px; left: 16px; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); z-index: 2; }
+  canvas { width: 100%; height: auto; aspect-ratio: 7 / 5; display: block;
+    background: var(--card-2); border: 1px solid var(--rule); border-radius: 2px; touch-action: pan-y; }
+  #forcePlot { aspect-ratio: 16 / 6; }
+  .plot-cap { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-2); margin: 18px 0 7px; }
+  .slider-row { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+  .slider-row .lab { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  .slider-row .val { font-family: var(--mono); font-variant-numeric: tabular-nums; min-width: 52px;
+    text-align: right; color: var(--vermilion); font-weight: 600; font-size: 15px; }
+  input[type="range"] { flex: 1; -webkit-appearance: none; appearance: none; height: 3px; border-radius: 2px;
+    background: var(--rule-2); outline: none; margin: 0; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--vermilion);
+    border: 3px solid var(--card); box-shadow: 0 1px 5px rgba(31,45,68,.35); cursor: pointer; }
+  input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%;
+    background: var(--vermilion); border: 3px solid var(--card); cursor: pointer; }
+  .legend { display: flex; gap: 16px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink-2); margin-top: 12px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 16px; height: 3px; margin-right: 6px; vertical-align: middle; }
+
+  /* ---- hero force + stats ---- */
+  .hero { border-bottom: 1px solid var(--rule); padding-bottom: 16px; margin-bottom: 16px; }
+  .hero .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-2); }
+  .hero .num { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums;
+    font-size: clamp(46px, 11vw, 76px); line-height: .95; letter-spacing: -.02em; color: var(--ink); margin-top: 6px; }
+  .hero .num .unit { font-size: .34em; color: var(--vermilion); letter-spacing: 0; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule);
+    border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .stat { background: var(--card); padding: 11px 12px; }
+  .stat.hl { background: var(--card-2); }
+  .stat .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-2); line-height: 1.3; min-height: 24px; }
+  .stat .v { font-family: var(--mono); font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums;
+    margin-top: 5px; }
+  .stat .v span:first-child { color: var(--ink); }
+  .stat .v em { font-style: normal; font-size: 11px; color: var(--ink-2); font-weight: 400; }
+
+  /* ---- flags ---- */
+  .flags { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; }
+  .flag { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; padding: 8px 0;
+    border-top: 1px dotted var(--rule); }
+  .flag .mark { font-family: var(--mono); font-weight: 600; flex: none; line-height: 1.35; }
+  .flag.ok .mark { color: var(--good); }
+  .flag.no .mark { color: var(--bad); }
+  .flag.no { color: var(--bad); }
+
+  /* ---- controls ---- */
+  .btn { width: 100%; background: var(--vermilion); color: #fff; border: none; border-radius: 2px;
+    padding: 12px 14px; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; cursor: pointer; transition: background .15s; }
+  .btn:hover { background: #a83a22; }
+  .btn:active { transform: translateY(1px); }
+  .status { margin-top: 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.45;
+    color: var(--ink-2); min-height: 16px; }
+  .note { font-size: 11.5px; line-height: 1.5; color: var(--ink-2); margin-top: 12px; }
+  .sub { font-size: 11.5px; color: var(--ink-2); margin: -8px 0 12px; }
+
+  /* ---- responsive ---- */
+  @media (max-width: 880px) {
+    .wrap { grid-template-columns: 1fr; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .formula { text-align: left; }
+  }
+  @media (max-width: 480px) {
+    body { background-size: 18px 18px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .panel { padding: 16px; }
+    label.field { grid-template-columns: 1fr 88px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">Mechanism Sizing · Fig. set 01</div>
+      <h1>Top-Hung Window <b>Piston</b> Calculator</h1>
+    </div>
+    <div class="formula">
+      vertical wall · opens outward · two struts<br>
+      <b>F(θ) = W·d·sinθ ⁄ h(θ)</b> &nbsp;·&nbsp; per strut = F ⁄ 2
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ============ INPUTS ============ -->
+  <div class="left">
+  <div class="panel" id="inputs">
+    <h2>Window</h2>
+    <div class="grp">
+      <label class="field"><span>Sash height <small>mm</small></span><input type="number" id="H" value="1000" step="10" min="0"></label>
+      <label class="field"><span>Mass, total <small>kg</small></span><input type="number" id="m" value="15" step="0.5" min="0"></label>
+      <div class="derived"><span>Centre of mass (uniform sash)</span><b id="dEcho">d = 500 mm</b></div>
+    </div>
+
+    <h2>Travel</h2>
+    <div class="grp">
+      <label class="field"><span>Max opening <small>θ_max · deg</small></span><input type="number" id="thmax" value="90" step="1" min="0"></label>
+      <label class="field"><span>Design angle <small>θ* · deg</small></span><input type="number" id="thstar" value="90" step="1" min="0"></label>
+    </div>
+
+    <h2>Strut · per unit</h2>
+    <div class="grp">
+      <label class="field"><span>Length, retracted <small>L min · mm</small></span><input type="number" id="Lmin" value="200" step="5" min="0"></label>
+      <label class="field"><span>Length, extended <small>L max · mm</small></span><input type="number" id="Lmax" value="590" step="5" min="0"></label>
+    </div>
+
+    <h2>Mounting points</h2>
+    <div class="sub">Sash mount sits on the window; frame mount sits on the wall.</div>
+    <div class="grp">
+      <label class="field"><span>Sash mount <small>u_A · mm down sash</small></span><input type="number" id="uA" value="300" step="10" min="0"></label>
+      <label class="field"><span>Frame mount <small>B_y · mm below hinge</small></span><input type="number" id="By" value="500" step="10" min="0"></label>
+    </div>
+    <div class="note">Both mounts lie on the surfaces, so at exactly 0° the strut lies flat in the wall plane and has zero leverage — the linkage is singular at fully-closed, so a latch (or hand) opens the first degree. The required force jumps to a finite value the instant it's cracked open, and stays finite through the rest of the travel.</div>
+  </div>
+
+  <div class="panel" id="optimizer">
+    <h2>Optimizer</h2>
+    <div class="grp">
+      <button class="btn" id="optBtn">Optimize for lowest force at θ*</button>
+      <div class="status" id="optStatus"></div>
+      <div class="note">Searches u_A (down the sash) and B_y (down the wall) for the lowest force at the design angle θ*, keeping the strut length inside [L min, L max] and the lever arm positive across the full travel.</div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ OUTPUTS ============ -->
+  <div class="right">
+    <section class="panel figure">
+      <div class="cap">Fig. 1 — Side elevation</div>
+      <canvas id="diagram" width="700" height="500"></canvas>
+      <div class="slider-row">
+        <span class="lab">θ</span>
+        <input type="range" id="angle" min="0" max="90" value="90" step="1" aria-label="opening angle">
+        <span class="val" id="angleVal">90°</span>
+      </div>
+      <div class="legend">
+        <span><i style="background:#1f2d44"></i>sash</span>
+        <span><i style="background:#2c5a86"></i>strut</span>
+        <span><i style="background:#c1452a"></i>force on sash</span>
+        <span><i style="background:#a9802f"></i>weight</span>
+      </div>
+      <div class="plot-cap">Fig. 2 — Force per strut vs opening angle</div>
+      <canvas id="forcePlot" width="700" height="280"></canvas>
+    </section>
+
+    <section class="panel">
+      <h2>Required force</h2>
+      <div class="hero">
+        <div class="lbl">Force per strut · θ = <span id="heroAngle">90°</span></div>
+        <div class="num"><span id="roFstrut">–</span> <span class="unit">N</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Total · 2 struts</div><div class="v"><span id="roFtot">–</span> <em>N</em></div></div>
+        <div class="stat"><div class="k">Strut length</div><div class="v"><span id="roLen">–</span> <em>mm</em></div></div>
+        <div class="stat"><div class="k">Stroke used</div><div class="v"><span id="roStroke">–</span> <em>%</em></div></div>
+        <div class="stat hl"><div class="k">Per strut @ θ*=<span id="tgtHdr">90°</span></div><div class="v"><span id="tFstrut">–</span> <em>N</em></div></div>
+      </div>
+      <ul class="flags" id="flags"></ul>
+    </section>
+  </div>
+</div>
+
+<script>
+"use strict";
+const GRAV = 9.81;
+const D2R = Math.PI / 180;
+
+/* ============================================================
+   MODEL — pure functions (single source of truth for the math)
+   x = outward (swing direction), y = up, hinge at origin.
+   θ in radians: 0 = closed (sash hangs straight down), 90° = horizontal.
+   ============================================================ */
+
+// Point fixed on the sash at local (u = down along sash, v = outward offset).
+function sashPoint(u, v, th) {
+  const s = Math.sin(th), c = Math.cos(th);
+  return { x: u * s + v * c, y: -u * c + v * s };
+}
+
+// Signed perpendicular lever arm from hinge to the strut line of action.
+function leverArm(A, B) {
+  const dx = A.x - B.x, dy = A.y - B.y;
+  const L = Math.hypot(dx, dy) || 1e-9;
+  const ex = dx / L, ey = dy / L;        // unit vector B -> A (force on sash)
+  return A.x * ey - A.y * ex;            // 2D cross r_A x ê
+}
+
+function strutLength(A, B) { return Math.hypot(A.x - B.x, A.y - B.y); }
+
+// Required TOTAL strut force to hold at angle th. May be Inf / negative.
+function requiredForceTotal(W, d, th, A, B) {
+  const h = leverArm(A, B);
+  return (W * d * Math.sin(th)) / h;
+}
+
+// Required TOTAL force at angle (deg), robust at the singular closed position: there both the
+// gravity torque and the lever arm vanish linearly in θ, so F is a finite 0/0 limit. Evaluate a
+// hair off the singular point to report that limit (small eps -> negligible bias).
+function forceTotalAt(st, thDeg) {
+  const B = { x: st.Bx, y: st.By };
+  const A = sashPoint(st.uA, st.vA, thDeg * D2R);
+  let F = (st.W * st.d * Math.sin(thDeg * D2R)) / leverArm(A, B);
+  if (!isFinite(F) || Math.abs(leverArm(A, B)) < 1e-6) {
+    const eps = 0.05, A2 = sashPoint(st.uA, st.vA, (thDeg + eps) * D2R);
+    F = (st.W * st.d * Math.sin((thDeg + eps) * D2R)) / leverArm(A2, B);
+  }
+  return F;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value);
+
+function readState() {
+  return {
+    H: num('H'), m: num('m'),
+    d: num('H') / 2, // uniform sash → centre of mass at mid-height
+    W: num('m') * GRAV,
+    thmax: num('thmax'), thstar: num('thstar'),
+    Lmin: num('Lmin'), Lmax: num('Lmax'),
+    uA: num('uA'), By: -num('By'), // input is positive "mm below hinge"; internal y is negative below the hinge
+    vA: 0, Bx: 0, // mounts are always on the surfaces: sash mount on the window, frame mount on the wall
+  };
+}
+
+/* ============================================================
+   SAMPLING helper — evaluate everything across the travel
+   ============================================================ */
+function sample(st, N) {
+  const out = [];
+  const B = { x: st.Bx, y: st.By };
+  for (let i = 0; i <= N; i++) {
+    const deg = st.thmax * i / N;
+    const th = deg * D2R;
+    const A = sashPoint(st.uA, st.vA, th);
+    const h = leverArm(A, B);
+    const L = strutLength(A, B);
+    const Ftot = (st.W * st.d * Math.sin(th)) / h;
+    const Fstrut = Ftot / 2;
+    out.push({ deg, th, A, h, L, Ftot, Fstrut });
+  }
+  return out;
+}
+
+/* ============================================================
+   DRAWING — diagram
+   ============================================================ */
+function fitTransform(canvas, pts, pad) {
+  let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+  for (const p of pts) {
+    minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x);
+    miny = Math.min(miny, p.y); maxy = Math.max(maxy, p.y);
+  }
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const sx = (w - 2 * pad) / Math.max(maxx - minx, 1);
+  const sy = (h - 2 * pad) / Math.max(maxy - miny, 1);
+  const s = Math.min(sx, sy);
+  const cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
+  return {
+    X: x => w / 2 + (x - cx) * s,
+    Y: y => h / 2 - (y - cy) * s,   // flip y (world up -> screen up)
+    s
+  };
+}
+
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return ctx;
+}
+
+// Drafting palette (mirrors the CSS theme; canvas can't read CSS vars directly).
+const C = {
+  ink: '#1f2d44', ink2: '#57647c', rule: '#d3ccba', rule2: '#bdb4a0',
+  vermilion: '#c1452a', blue: '#2c5a86', ochre: '#a9802f', paper: '#f6f2e9',
+  good: '#2f7d57', bad: '#b3402f',
+};
+const MONO = "11px 'IBM Plex Mono', ui-monospace, monospace";
+
+function drawDiagram(st, thDeg, showReach) {
+  const canvas = $('diagram');
+  const ctx = setupCanvas(canvas);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const th = thDeg * D2R;
+  const O = { x: 0, y: 0 };
+  const B = { x: st.Bx, y: st.By };
+  const A = sashPoint(st.uA, st.vA, th);
+  const tip = sashPoint(st.H, 0, th);               // bottom edge of sash
+  const G = sashPoint(st.d, 0, th);                  // centre of mass
+  // include closed + fully-open tips so the view stays stable while sliding
+  const tipClosed = sashPoint(st.H, 0, 0);
+  const tipOpen = sashPoint(st.H, 0, st.thmax * D2R);
+  const T = fitTransform(canvas, [O, B, A, tip, tipClosed, tipOpen, { x: 0, y: -st.H }], 52);
+
+  // engineering grid (fine, in screen space)
+  ctx.strokeStyle = 'rgba(31,45,68,0.05)'; ctx.lineWidth = 1;
+  for (let gx = (T.X(0) % 22 + 22) % 22; gx < w; gx += 22) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke(); }
+  for (let gy = 0; gy < h; gy += 22) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke(); }
+
+  // wall, with section hatch on the room side
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(T.X(0), 0); ctx.lineTo(T.X(0), h); ctx.stroke();
+  ctx.strokeStyle = C.rule2; ctx.lineWidth = 1;
+  for (let yy = 6; yy < h; yy += 15) { ctx.beginPath(); ctx.moveTo(T.X(0), yy); ctx.lineTo(T.X(0) - 11, yy + 11); ctx.stroke(); }
+  ctx.fillStyle = C.ink2; ctx.font = MONO; ctx.textAlign = 'right';
+  ctx.fillText('ROOM', T.X(0) - 16, 16);
+  ctx.textAlign = 'left'; ctx.fillText('OUTSIDE →', T.X(0) + 10, 16);
+
+  // θ dimension arc at the hinge (from closed/down to current sash direction)
+  const r = 42;
+  const angClosed = Math.PI / 2;                     // straight down, screen space
+  const angNow = Math.atan2(Math.cos(th), Math.sin(th));
+  ctx.strokeStyle = C.vermilion; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(T.X(0), T.Y(0), r, angNow, angClosed); ctx.stroke();
+  const angMid = (angNow + angClosed) / 2;
+  ctx.fillStyle = C.vermilion; ctx.font = "600 " + MONO; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('θ ' + thDeg.toFixed(0) + '°', T.X(0) + (r + 6) * Math.cos(angMid), T.Y(0) + (r + 6) * Math.sin(angMid));
+  ctx.textBaseline = 'alphabetic';
+
+  // ghost of the closed sash (dashed)
+  ctx.strokeStyle = C.rule2; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(T.X(0), T.Y(0)); ctx.lineTo(T.X(tipClosed.x), T.Y(tipClosed.y)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // reach overlay (shown while editing the mounts): strut length limits + sash-mount travel range
+  if (showReach) {
+    const bx = T.X(B.x), by = T.Y(B.y);
+    // L min / L max limit circles centred on the frame mount B (the reachable annulus)
+    ctx.strokeStyle = C.blue; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.5; ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.arc(bx, by, st.Lmin * T.s, 0, 2 * Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(bx, by, st.Lmax * T.s, 0, 2 * Math.PI); ctx.stroke();
+    ctx.setLineDash([]);
+    // labels along an up-right ray from B
+    ctx.fillStyle = C.blue; ctx.font = MONO; ctx.textAlign = 'left';
+    ctx.fillText('L min', bx + st.Lmin * T.s * 0.71 + 3, by - st.Lmin * T.s * 0.71);
+    ctx.fillText('L max', bx + st.Lmax * T.s * 0.71 + 3, by - st.Lmax * T.s * 0.71);
+    ctx.globalAlpha = 1;
+    // sash-mount travel arc (radius u_A about the hinge): green where the strut stays in range, red where not
+    const steps = 72; let prev = null;
+    ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+    for (let i = 0; i <= steps; i++) {
+      const t = (st.thmax * i / steps) * D2R;
+      const P = sashPoint(st.uA, st.vA, t);
+      const L = strutLength(P, B);
+      const inRange = L >= st.Lmin && L <= st.Lmax;
+      const sx = T.X(P.x), sy = T.Y(P.y);
+      if (prev) {
+        const ok = inRange && prev.inRange;
+        ctx.strokeStyle = ok ? C.good : C.bad; ctx.globalAlpha = ok ? 0.5 : 0.95;
+        ctx.beginPath(); ctx.moveTo(prev.sx, prev.sy); ctx.lineTo(sx, sy); ctx.stroke();
+      }
+      prev = { sx, sy, inRange };
+    }
+    ctx.globalAlpha = 1; ctx.lineCap = 'butt';
+    // mark the travel endpoints (closed → open)
+    const a0 = sashPoint(st.uA, st.vA, 0), a1 = sashPoint(st.uA, st.vA, st.thmax * D2R);
+    ctx.fillStyle = C.ink2; ctx.font = MONO; ctx.textAlign = 'left';
+    ctx.fillText('A·closed', T.X(a0.x) + 7, T.Y(a0.y) + 4);
+    ctx.fillText('A·open', T.X(a1.x) + 7, T.Y(a1.y) + 4);
+  }
+
+  // sash
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(T.X(O.x), T.Y(O.y)); ctx.lineTo(T.X(tip.x), T.Y(tip.y)); ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  // strut B -> A  (blue when valid, vermilion when over-centre)
+  const h_arm = leverArm(A, B);
+  ctx.strokeStyle = h_arm > 0 ? C.blue : C.vermilion; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(T.X(B.x), T.Y(B.y)); ctx.lineTo(T.X(A.x), T.Y(A.y)); ctx.stroke();
+
+  // weight arrow at the centre of mass (downward)
+  drawArrow(ctx, T.X(G.x), T.Y(G.y), T.X(G.x), T.Y(G.y) + 46, C.ochre, 2.5);
+  ctx.fillStyle = C.ochre; ctx.font = "600 " + MONO; ctx.textAlign = 'left';
+  ctx.fillText('W', T.X(G.x) + 7, T.Y(G.y) + 42);
+
+  // strut force on the sash at A (direction B -> A)
+  const dx = A.x - B.x, dy = A.y - B.y, Lmag = Math.hypot(dx, dy) || 1;
+  const ux = dx / Lmag, uy = dy / Lmag, fl = 52;
+  drawArrow(ctx, T.X(A.x), T.Y(A.y), T.X(A.x) + ux * fl, T.Y(A.y) - uy * fl, C.vermilion, 2.5);
+
+  // joints
+  dot(ctx, T.X(O.x), T.Y(O.y), C.ink, 'HINGE');
+  dot(ctx, T.X(A.x), T.Y(A.y), C.ink, 'A · sash');
+  dot(ctx, T.X(B.x), T.Y(B.y), C.blue, 'B · frame');
+}
+
+function dot(ctx, x, y, color, label) {
+  ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 7); ctx.fill();
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
+  if (label) { ctx.fillStyle = C.ink2; ctx.font = MONO; ctx.textAlign = 'left'; ctx.fillText(label, x + 9, y - 7); }
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color, lw) {
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const a = Math.atan2(y2 - y1, x2 - x1), s = 7;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - s * Math.cos(a - 0.4), y2 - s * Math.sin(a - 0.4));
+  ctx.lineTo(x2 - s * Math.cos(a + 0.4), y2 - s * Math.sin(a + 0.4));
+  ctx.closePath(); ctx.fill();
+}
+
+// Force-per-strut vs opening angle, with a live marker at the current slider angle.
+function drawForcePlot(st, thDeg) {
+  const canvas = $('forcePlot');
+  const ctx = setupCanvas(canvas);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const padL = 48, padR = 14, padT = 12, padB = 26;
+  const x0 = padL, x1 = w - padR, y0 = h - padB, y1 = padT;
+
+  // sample force/strut across the travel (forceTotalAt handles the singular 0° as a finite limit)
+  const N = 90, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const deg = st.thmax * i / N;
+    pts.push({ deg, F: forceTotalAt(st, deg) / 2 });
+  }
+  const fin = pts.map(p => p.F).filter(isFinite);
+  let fmax = Math.max(10, ...fin), fmin = Math.min(0, ...fin);
+  fmax = Math.ceil(fmax / 20) * 20; fmin = Math.floor(fmin / 20) * 20;
+  const X = deg => x0 + (st.thmax ? deg / st.thmax : 0) * (x1 - x0);
+  const Y = F => y0 - (F - fmin) / (fmax - fmin || 1) * (y0 - y1);
+
+  // grid + axes
+  ctx.strokeStyle = 'rgba(31,45,68,0.07)'; ctx.lineWidth = 1;
+  ctx.fillStyle = C.ink2; ctx.font = "10px 'IBM Plex Mono', ui-monospace, monospace";
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) {
+    const F = fmin + (fmax - fmin) * i / 4, yy = Y(F);
+    ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x1, yy); ctx.stroke();
+    ctx.fillText(F.toFixed(0), x0 - 6, yy);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i = 0; i <= 6; i++) {
+    const deg = st.thmax * i / 6;
+    ctx.fillText(deg.toFixed(0) + '°', X(deg), y0 + 6);
+  }
+  // zero line if the curve goes negative (over-centre)
+  if (fmin < 0) { ctx.strokeStyle = C.rule2; ctx.beginPath(); ctx.moveTo(x0, Y(0)); ctx.lineTo(x1, Y(0)); ctx.stroke(); }
+  // y-axis caption
+  ctx.save(); ctx.translate(13, (y0 + y1) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = C.ink2;
+  ctx.fillText('N / strut', 0, 0); ctx.restore();
+
+  // design-angle θ* reference
+  if (st.thstar >= 0 && st.thstar <= st.thmax) {
+    ctx.strokeStyle = C.blue; ctx.globalAlpha = 0.5; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(X(st.thstar), y1); ctx.lineTo(X(st.thstar), y0); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.fillStyle = C.blue; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('θ*', X(st.thstar), y1 + 9);
+  }
+
+  // the force curve
+  ctx.strokeStyle = C.vermilion; ctx.lineWidth = 2.5; ctx.beginPath();
+  let started = false;
+  for (const p of pts) {
+    if (!isFinite(p.F)) { started = false; continue; }
+    const xx = X(p.deg), yy = Y(p.F);
+    if (!started) { ctx.moveTo(xx, yy); started = true; } else ctx.lineTo(xx, yy);
+  }
+  ctx.stroke();
+
+  // live marker at the current slider angle
+  const Fcur = forceTotalAt(st, thDeg) / 2;
+  if (isFinite(Fcur)) {
+    const mx = X(thDeg), my = Y(Fcur);
+    ctx.strokeStyle = C.ink2; ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mx, y0); ctx.lineTo(mx, my); ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(mx, my, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = C.vermilion; ctx.beginPath(); ctx.arc(mx, my, 4, 0, 7); ctx.fill();
+    // value label, kept inside the plot
+    ctx.font = "600 11px 'IBM Plex Mono', ui-monospace, monospace"; ctx.fillStyle = C.ink;
+    const txt = Fcur.toFixed(0) + ' N @ ' + thDeg.toFixed(0) + '°';
+    const right = mx < x1 - 90;
+    ctx.textAlign = right ? 'left' : 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText(txt, mx + (right ? 9 : -9), my - 7);
+  }
+}
+
+/* ============================================================
+   OPTIMIZER — grid sweep + Nelder–Mead (plain JS, no deps)
+   Design variables: [uA (down the sash), By (down the wall)]. The mounts are always on the
+   surfaces (vA = 0, Bx = 0), so this is a 2-variable search.
+   ============================================================ */
+function optBounds(st) {
+  const H = st.H;
+  return [[0.05 * H, H], [-H, 0.20 * H]]; // [uA, By]
+}
+
+function clampVars(v, bounds) {
+  return v.map((x, i) => Math.min(bounds[i][1], Math.max(bounds[i][0], x)));
+}
+
+// Objective: per-strut force at the design angle θ*, plus penalties that keep the strut length
+// in range and the lever arm positive across the whole travel.
+function makeObjective(st, bounds) {
+  const N = 90; // sample every ~1° so constraint violations can't hide between samples
+  const sb = (val, b) => (val < b[0] ? (b[0] - val) : val > b[1] ? (val - b[1]) : 0);
+  return function (vars) {
+    const uA = vars[0], By = vars[1];
+    const B = { x: 0, y: By };
+    let penalty = 0;
+    penalty += 50 * vars.reduce((s, x, i) => s + sb(x, bounds[i]), 0);
+    // Skip i=0: the closed position is a 0/0 limit (torque and lever arm both -> 0); it never
+    // governs the force, and the lever arm there is exactly 0 by geometry (mounts on-surface).
+    for (let i = 1; i <= N; i++) {
+      const th = (st.thmax * i / N) * D2R;
+      const A = sashPoint(uA, 0, th);
+      const h = leverArm(A, B);
+      const L = strutLength(A, B);
+      if (h <= 1) penalty += 1e5 + 100 * (1 - h);
+      if (L < st.Lmin) penalty += 1e4 * (st.Lmin - L);
+      if (L > st.Lmax) penalty += 1e4 * (L - st.Lmax);
+    }
+    const At = sashPoint(uA, 0, st.thstar * D2R);
+    const ht = leverArm(At, B);
+    const Ftgt = ht > 1 ? (st.W * st.d * Math.sin(st.thstar * D2R)) / ht : 1e9;
+    return Ftgt / 2 + penalty; // per strut
+  };
+}
+
+function nelderMead(f, x0, steps, maxIter) {
+  const n = x0.length;
+  let simplex = [{ x: x0.slice(), f: f(x0) }];
+  for (let i = 0; i < n; i++) {
+    const xi = x0.slice(); xi[i] += steps[i];
+    simplex.push({ x: xi, f: f(xi) });
+  }
+  const alpha = 1, gamma = 2, rho = 0.5, sigma = 0.5;
+  for (let it = 0; it < maxIter; it++) {
+    simplex.sort((a, b) => a.f - b.f);
+    const c = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) c[j] += simplex[i].x[j];
+    for (let j = 0; j < n; j++) c[j] /= n;
+    const worst = simplex[n];
+    const xr = c.map((cj, j) => cj + alpha * (cj - worst.x[j]));
+    const fr = f(xr);
+    if (fr < simplex[0].f) {
+      const xe = c.map((cj, j) => cj + gamma * (xr[j] - cj));
+      const fe = f(xe);
+      simplex[n] = fe < fr ? { x: xe, f: fe } : { x: xr, f: fr };
+    } else if (fr < simplex[n - 1].f) {
+      simplex[n] = { x: xr, f: fr };
+    } else {
+      const xc = c.map((cj, j) => cj + rho * (worst.x[j] - cj));
+      const fc = f(xc);
+      if (fc < worst.f) { simplex[n] = { x: xc, f: fc }; }
+      else {
+        const best = simplex[0];
+        for (let i = 1; i <= n; i++) {
+          const xs = best.x.map((bj, j) => bj + sigma * (simplex[i].x[j] - bj));
+          simplex[i] = { x: xs, f: f(xs) };
+        }
+      }
+    }
+  }
+  simplex.sort((a, b) => a.f - b.f);
+  return simplex[0];
+}
+
+// Grid sweep over an arbitrary number of dimensions (odometer over `steps` points per axis).
+// Returns the best K grid points, ascending by objective, as multi-start seeds.
+function gridSweep(f, bounds, steps, K) {
+  const dims = bounds.length, total = Math.pow(steps, dims);
+  const all = [];
+  for (let n = 0; n < total; n++) {
+    const v = bounds.map((b, k) => {
+      const g = Math.floor(n / Math.pow(steps, k)) % steps;
+      return b[0] + (b[1] - b[0]) * g / (steps - 1);
+    });
+    all.push({ x: v, f: f(v) });
+  }
+  all.sort((a, b) => a.f - b.f);
+  return all.slice(0, K);
+}
+
+function runOptimizer() {
+  const st = readState();
+  const bounds = optBounds(st);
+  const f = makeObjective(st, bounds);
+
+  // coarse grid for good starts, then multi-start Nelder–Mead.
+  // Multi-start because the penalised landscape has local minima a single start can stick in.
+  const seeds = gridSweep(f, bounds, 25, 6);
+  const steps = bounds.map(() => st.H * 0.05);
+  let res = null;
+  for (const seed of seeds) {
+    let r = nelderMead(f, seed.x, steps, 400);
+    r = nelderMead(f, r.x, steps.map(s => s / 4), 200);
+    if (!res || r.f < res.f) res = r;
+  }
+  const v = clampVars(res.x, bounds);
+
+  $('uA').value = v[0].toFixed(1);
+  $('By').value = (-v[1]).toFixed(1); // internal y is negative below the hinge; show as positive "mm below hinge"
+
+  // report (skip the singular closed point at deg 0)
+  const st2 = readState();
+  const data = sample(st2, 90).filter(p => p.deg > 0.01);
+  const feasible = data.every(p => p.h > 0 && p.L >= st2.Lmin - 0.5 && p.L <= st2.Lmax + 0.5);
+  const peak = Math.max(...data.map(p => p.Fstrut));
+  const Ftgt = forceTotalAt(st2, st2.thstar) / 2;
+  $('optStatus').innerHTML = feasible
+    ? `✓ Force/strut at θ* = <b>${Ftgt.toFixed(1)} N</b> · peak over travel ${peak.toFixed(1)} N · length stays in range.`
+    : `⚠ No fully feasible solution within bounds — best found shown. Try widening L min/L max or θ_max.`;
+  $('optStatus').style.color = feasible ? 'var(--good)' : 'var(--bad)';
+  render();
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function flag(ok, text) {
+  return `<li class="flag ${ok ? 'ok' : 'no'}"><span class="mark">${ok ? '✓' : '✕'}</span><span>${text}</span></li>`;
+}
+
+function render() {
+  const st = readState();
+
+  // sync slider range to thmax
+  const slider = $('angle');
+  slider.max = st.thmax;
+  if (+slider.value > st.thmax) slider.value = st.thmax;
+  const thDeg = +slider.value;
+  $('angleVal').textContent = thDeg.toFixed(0) + '°';
+  $('heroAngle').textContent = thDeg.toFixed(0) + '°';
+  $('tgtHdr').textContent = st.thstar.toFixed(0) + '°';
+  $('dEcho').textContent = 'd = ' + (st.d).toFixed(0) + ' mm';
+
+  // feasibility across travel (exclude the singular closed point at 0°)
+  const data = sample(st, 90);
+  const open = data.filter(p => p.deg > 0.01);
+  const minL = Math.min(...data.map(p => p.L)), maxL = Math.max(...data.map(p => p.L));
+  const minH = Math.min(...open.map(p => p.h));
+  const hPos = minH > 0;
+  const lenOk = minL >= st.Lmin - 0.5 && maxL <= st.Lmax + 0.5;
+
+  // show the reach overlay (limit circles + travel arc) while editing the mounts,
+  // or automatically whenever the current design is infeasible
+  drawDiagram(st, thDeg, showReach || !hPos || !lenOk);
+  drawForcePlot(st, thDeg);
+
+  // values at slider angle
+  const B = { x: st.Bx, y: st.By };
+  const Asl = sashPoint(st.uA, st.vA, thDeg * D2R);
+  const Lsl = strutLength(Asl, B);
+  const Ftot = forceTotalAt(st, thDeg);
+  const Fstrut = Ftot / 2;
+  const stroke = (Lsl - st.Lmin) / (st.Lmax - st.Lmin) * 100;
+  $('roFstrut').textContent = isFinite(Fstrut) ? Fstrut.toFixed(0) : '∞';
+  $('roFtot').textContent = isFinite(Ftot) ? Ftot.toFixed(0) : '∞';
+  $('roLen').textContent = Lsl.toFixed(0);
+  $('roStroke').textContent = stroke.toFixed(0);
+
+  // force per strut at the design angle θ*
+  const FtotT = forceTotalAt(st, st.thstar);
+  $('tFstrut').textContent = isFinite(FtotT) ? (FtotT / 2).toFixed(0) : '∞';
+
+  $('flags').innerHTML =
+    flag(lenOk, `Strut length stays in [${st.Lmin}, ${st.Lmax}] mm (travel ${minL.toFixed(0)}–${maxL.toFixed(0)} mm)`);
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+// when the user is editing a mounting point by hand, overlay the reach limits + travel range
+let showReach = false;
+['uA', 'By'].forEach(id => {
+  $(id).addEventListener('focus', () => { showReach = true; render(); });
+  $(id).addEventListener('blur', () => { showReach = false; render(); });
+});
+
+document.querySelectorAll('input[type=number]').forEach(el => el.addEventListener('input', render));
+$('angle').addEventListener('input', render);
+$('optBtn').addEventListener('click', runOptimizer);
+window.addEventListener('resize', render);
+render();
+</script>
+</body>
+</html>
